@@ -46,7 +46,11 @@ export default function TitleCard({ title, showActions = true }) {
       <div className="relative overflow-hidden h-96 bg-slate-700">
         {/* Image */}
         <img
-          src={title.image}
+          src={
+            title.image && title.image.trim() !== ""
+              ? title.image
+              : "https://placehold.co/500x750?text=No+Image"
+          }
           alt={title.title}
           className="w-full h-full object-cover"
           onError={(e) => {
