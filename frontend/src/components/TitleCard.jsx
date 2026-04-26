@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import fallbackImage from "../assets/no-image.png";
+
 import {
   saveTitleToList,
   removeTitleFromList,
@@ -46,12 +46,12 @@ export default function TitleCard({ title, showActions = true }) {
       <div className="relative overflow-hidden h-96 bg-slate-700">
         {/* Image */}
         <img
-          src={title.image ? title.image : fallbackImage}
+          src={title.image}
           alt={title.title}
           className="w-full h-full object-cover"
           onError={(e) => {
             e.target.onerror = null;
-            e.target.src = fallbackImage;
+            e.target.src = "https://placehold.co/500x750?text=No+Image";
           }}
         />
 
