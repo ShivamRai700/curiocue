@@ -1,7 +1,11 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { saveTitleToList, removeTitleFromList, isTitleSaved } from '../utils/storage';
-import { shareNative, shareToTwitter } from '../utils/shareUtils';
+import React from "react";
+import { Link } from "react-router-dom";
+import {
+  saveTitleToList,
+  removeTitleFromList,
+  isTitleSaved,
+} from "../utils/storage";
+import { shareNative, shareToTwitter } from "../utils/shareUtils";
 
 export default function TitleCard({ title, showActions = true }) {
   const [isSaved, setIsSaved] = React.useState(isTitleSaved(title.id));
@@ -17,20 +21,20 @@ export default function TitleCard({ title, showActions = true }) {
   };
 
   const getRatingColor = (rating) => {
-    if (rating >= 8) return 'text-green-400';
-    if (rating >= 7) return 'text-yellow-400';
-    return 'text-orange-400';
+    if (rating >= 8) return "text-green-400";
+    if (rating >= 7) return "text-yellow-400";
+    return "text-orange-400";
   };
 
   const getTypeEmoji = (type) => {
     const emojis = {
-      movie: '🎬',
-      series: '📺',
-      anime: '✨',
-      book: '📚',
-      documentary: '🎥'
+      movie: "🎬",
+      series: "📺",
+      anime: "✨",
+      book: "📚",
+      documentary: "🎥",
     };
-    return emojis[type] || '🎬';
+    return emojis[type] || "🎬";
   };
 
   return (
@@ -41,9 +45,12 @@ export default function TitleCard({ title, showActions = true }) {
       <div className="relative overflow-hidden h-96 bg-slate-700">
         {/* Image */}
         <img
-          src={title.image}
+          src={title.image || "/no-image.png"}
           alt={title.title}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+          onError={(e) => {
+            e.target.src = "/no-image.png";
+          }}
+          className="w-full h-full object-cover"
         />
 
         {/* Overlay */}
@@ -51,13 +58,17 @@ export default function TitleCard({ title, showActions = true }) {
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-xl">{getTypeEmoji(title.type)}</span>
-              {title.year && <span className="text-sm text-slate-300">{title.year}</span>}
+              {title.year && (
+                <span className="text-sm text-slate-300">{title.year}</span>
+              )}
             </div>
           </div>
 
           {/* Rating */}
           {title.rating && (
-            <div className={`text-lg font-bold ${getRatingColor(title.rating)}`}>
+            <div
+              className={`text-lg font-bold ${getRatingColor(title.rating)}`}
+            >
               ⭐ {title.rating.toFixed(1)}
             </div>
           )}
@@ -78,7 +89,9 @@ export default function TitleCard({ title, showActions = true }) {
         {title.genre && (
           <div className="flex flex-wrap gap-1 mb-3">
             {title.genre.slice(0, 2).map((g, i) => (
-              <span key={i} className="text-xs text-slate-400">{g}</span>
+              <span key={i} className="text-xs text-slate-400">
+                {g}
+              </span>
             ))}
           </div>
         )}
@@ -93,9 +106,9 @@ export default function TitleCard({ title, showActions = true }) {
             <button
               onClick={handleSave}
               className="flex-1 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 transition text-sm font-medium"
-              title={isSaved ? 'Remove from saved' : 'Save'}
+              title={isSaved ? "Remove from saved" : "Save"}
             >
-              {isSaved ? '❤️ Saved' : '🤍 Save'}
+              {isSaved ? "❤️ Saved" : "🤍 Save"}
             </button>
             <button
               onClick={(e) => {
