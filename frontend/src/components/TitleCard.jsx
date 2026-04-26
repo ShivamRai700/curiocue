@@ -45,12 +45,13 @@ export default function TitleCard({ title, showActions = true }) {
       <div className="relative overflow-hidden h-96 bg-slate-700">
         {/* Image */}
         <img
-          src={title.image || "/no-image.png"}
+          src={title.image ? title.image : "/no-image.png"}
           alt={title.title}
+          className="w-full h-full object-cover"
           onError={(e) => {
+            e.target.onerror = null; // prevent infinite loop
             e.target.src = "/no-image.png";
           }}
-          className="w-full h-full object-cover"
         />
 
         {/* Overlay */}
