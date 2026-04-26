@@ -52,6 +52,14 @@ export const getRecommendationsByHistory = (titleIds) => {
   return apiClient.post('/recommendations/based-on-history', { titleIds });
 };
 
+// AI Explanation
+export const getAIExplanation = (title, plot, id) => {
+  return apiClient.post(`/explain/${id}`, {
+    title,
+    plot
+  });
+};
+
 // Error handler
 export const handleApiError = (error) => {
   if (error.response) {
@@ -61,11 +69,4 @@ export const handleApiError = (error) => {
     return 'No response from server. Is the backend running?';
   }
   return error.message || 'An error occurred';
-};
-
-export const getAIExplanation = (title, plot, id) => {
-  return apiClient.post(`/explain/${id}`, {
-    title,
-    plot
-  });
 };
