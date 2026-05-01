@@ -1,21 +1,48 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TitleCard from '../components/TitleCard';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { getRecommendations, handleApiError } from '../utils/api';
+import { getRecommendations, getSearchSuggestions, handleApiError } from '../utils/api';
 
 export default function Home() {
   const navigate = useNavigate();
 
   const [search, setSearch] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [trending, setTrending] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const inputRef = useRef(null);
 
   // 🔥 fetch trending ONCE
   useEffect(() => {
     fetchTrending();
   }, []);
+
+  // 🔥 DEBOUNCED SUGGESTIONS
+  useEffect(() => {
+    if (!search.trim() || search.trim().length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        const res = await getSearchSuggestions(search.trim());
+        const data = res?.data?.data?.suggestions || [];
+        setSuggestions(data);
+        setShowSuggestions(data.length > 0);
+      } catch (err) {
+        console.error('Suggestions error:', err);
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [search]);
 
   const fetchTrending = async () => {
     try {
@@ -46,7 +73,27 @@ export default function Home() {
 
     if (!q) return;
 
+    setShowSuggestions(false);
     navigate(`/search?q=${encodeURIComponent(q)}&type=movie`);
+  };
+
+  // Handle suggestion click
+  const handleSuggestionClick = (suggestion) => {
+    setSearch(suggestion.title);
+    setShowSuggestions(false);
+    navigate(`/search?q=${encodeURIComponent(suggestion.title)}&type=movie`);
+  };
+
+  // Handle input focus
+  const handleInputFocus = () => {
+    if (suggestions.length > 0) {
+      setShowSuggestions(true);
+    }
+  };
+
+  // Handle input blur (delay to allow click on suggestions)
+  const handleInputBlur = () => {
+    setTimeout(() => setShowSuggestions(false), 150);
   };
 
   return (
@@ -64,25 +111,58 @@ export default function Home() {
         </p>
 
         {/* SEARCH */}
-        <form
-          onSubmit={handleSearch}
-          className="max-w-xl mx-auto flex gap-3"
-        >
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search movie name..."
-            className="flex-1 px-5 py-3 rounded-xl bg-slate-800 border border-slate-600 text-white focus:outline-none focus:border-indigo-500"
-          />
+        <div className="max-w-xl mx-auto relative">
+          <form onSubmit={handleSearch} className="flex gap-3">
+            <div className="flex-1 relative">
+              <input
+                ref={inputRef}
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onFocus={handleInputFocus}
+                onBlur={handleInputBlur}
+                placeholder="Search movie name..."
+                className="w-full px-5 py-3 rounded-xl bg-slate-800 border border-slate-600 text-white focus:outline-none focus:border-indigo-500"
+              />
 
-          <button
-            type="submit"
-            className="btn-primary px-6"
-          >
-            Search
-          </button>
-        </form>
+              {/* SUGGESTIONS DROPDOWN */}
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-slate-600 rounded-xl shadow-lg z-50 max-h-64 overflow-y-auto">
+                  {suggestions.map((suggestion) => (
+                    <button
+                      key={`${suggestion.type}-${suggestion.id}`}
+                      type="button"
+                      onClick={() => handleSuggestionClick(suggestion)}
+                      className="w-full px-4 py-3 text-left hover:bg-slate-700 transition flex items-center gap-3 first:rounded-t-xl last:rounded-b-xl"
+                    >
+                      {suggestion.image && (
+                        <img
+                          src={suggestion.image}
+                          alt={suggestion.title}
+                          className="w-8 h-12 object-cover rounded"
+                        />
+                      )}
+                      <div>
+                        <div className="text-white font-medium">{suggestion.title}</div>
+                        <div className="text-slate-400 text-sm">
+                          {suggestion.year && `${suggestion.year} • `}
+                          {suggestion.type === 'movie' ? 'Movie' : 'TV Show'}
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              className="btn-primary px-6"
+            >
+              Search
+            </button>
+          </form>
+        </div>
 
         
 

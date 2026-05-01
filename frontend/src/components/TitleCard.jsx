@@ -87,7 +87,7 @@ export default function TitleCard({ title, showActions = true }) {
       </div>
 
       {/* Content */}
-      <div className="p-4 flex flex-col h-40">
+      <div className="p-4 flex flex-col h-32">
         <h3 className="font-bold text-lg mb-2 truncate group-hover:text-indigo-300 transition">
           {title.title}
         </h3>
@@ -102,13 +102,9 @@ export default function TitleCard({ title, showActions = true }) {
           </div>
         )}
 
-        <p className="text-slate-300 text-sm truncate-lines-2 mb-3 flex-1">
-          {title.summary || title.plot}
-        </p>
-
         {/* Actions */}
         {showActions && (
-          <div className="flex gap-2 pt-3 border-t border-slate-700">
+          <div className="flex gap-2 mt-auto pt-3 border-t border-slate-700">
             <button
               onClick={handleSave}
               className="flex-1 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 transition text-sm font-medium"

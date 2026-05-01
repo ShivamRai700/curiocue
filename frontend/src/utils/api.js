@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE = import.meta.env.VITE_API_URL;
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 export const apiClient = axios.create({
   baseURL: API_BASE,
@@ -14,8 +14,10 @@ export const searchTitles = (query, type, genre, mood, page) => {
   });
 };
 
-export const getSearchSuggestions = () => {
-  return apiClient.get('/search/suggestions');
+export const getSearchSuggestions = (query) => {
+  return apiClient.get('/search/suggestions', {
+    params: { q: query }
+  });
 };
 
 // Title Details

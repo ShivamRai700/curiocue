@@ -17,26 +17,26 @@ router.post('/:id', async (req, res) => {
     }
 
     const prompt = `
-You explain movies in a FUN, RELATABLE, slightly Hinglish way.
+You are a knowledgeable film critic providing clear, insightful explanations of movies.
 
-Make it:
-- Short (3-5 bullet points)
-- Funny but insightful
-- No boring academic tone
-- Gen Z relatable
+Analyze the following movie and provide a structured response:
 
-Movie: ${title}
-Plot: ${plot}
+Movie Title: ${title}
+Plot Summary: ${plot}
 
-Output ONLY JSON:
-
+Provide a JSON response with exactly this structure:
 {
-  "themes": [
-    "point 1",
-    "point 2",
-    "point 3"
-  ]
+  "summary": "A clear, concise explanation of the movie's story and main plot points (2-3 sentences)",
+  "themes": ["theme1", "theme2", "theme3"],
+  "whyWorthIt": "Why this movie is worth watching - what makes it special or impactful (2-3 sentences)"
 }
+
+Guidelines:
+- Keep the summary factual and spoiler-free
+- Themes should be meaningful concepts, not generic (e.g., "redemption through sacrifice" not "good vs evil")
+- WhyWorthIt should highlight unique aspects, performances, or cultural impact
+- Use professional, engaging language without slang or memes
+- Ensure themes are diverse and insightful
 `;
 
     const response = await fetch(
@@ -60,14 +60,28 @@ Output ONLY JSON:
     let parsed;
 
     try {
-      parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
-    } catch {
-      return res.json({
-        success: true,
-        data: {
-          themes: [text] // fallback
-        }
-      });
+      // Clean the response text
+      const cleanedText = text.replace(/```json|```/g, "").trim();
+      parsed = JSON.parse(cleanedText);
+    } catch (parseError) {
+      console.error("JSON parse error:", parseError);
+      console.error("Raw response:", text);
+
+      // Fallback structure
+      parsed = {
+        summary: "Unable to generate summary at this time.",
+        themes: ["Analysis unavailable"],
+        whyWorthIt: "Please try again later."
+      };
+    }
+
+    // Validate the structure
+    if (!parsed.summary || !Array.isArray(parsed.themes) || !parsed.whyWorthIt) {
+      parsed = {
+        summary: parsed.summary || "Summary not available.",
+        themes: Array.isArray(parsed.themes) ? parsed.themes : ["Themes not available"],
+        whyWorthIt: parsed.whyWorthIt || "Recommendation not available."
+      };
     }
 
     res.json({

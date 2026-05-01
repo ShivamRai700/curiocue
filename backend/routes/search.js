@@ -60,16 +60,55 @@ router.get('/', async (req, res) => {
     }
 });
 
-// 🔧 KEEP THIS (for filters)
-router.get('/suggestions', (req, res) => {
-    res.json({
-        success: true,
-        data: {
-            genres: [], // optional for now
-            moods: [],  // optional
-            types: ['movie', 'series', 'anime', 'book', 'documentary']
+// 🔧 SEARCH SUGGESTIONS (real-time autocomplete)
+router.get('/suggestions', async (req, res) => {
+    try {
+        const { q } = req.query;
+
+        if (!q || q.trim().length < 2) {
+            return res.json({
+                success: true,
+                data: { suggestions: [] }
+            });
         }
-    });
+
+        const encodedQuery = encodeURIComponent(q.trim());
+
+        // Use TMDB multi search for movies, TV shows, etc.
+        const url = `${TMDB_BASE}/search/multi?api_key=${process.env.TMDB_API_KEY}&query=${encodedQuery}&page=1`;
+        console.log("Fetching suggestions:", url);
+
+        const response = await fetch(url);
+        const data = await response.json();
+
+        // Filter and map to top 5-7 relevant results
+        const suggestions = data.results
+            .filter(item => item.media_type === 'movie' || item.media_type === 'tv')
+            .slice(0, 7)
+            .map(item => ({
+                id: item.id,
+                type: item.media_type,
+                title: item.media_type === 'movie' ? item.title : item.name,
+                year: item.media_type === 'movie'
+                    ? (item.release_date?.split("-")[0])
+                    : (item.first_air_date?.split("-")[0]),
+                image: item.poster_path
+                    ? IMAGE_BASE + item.poster_path
+                    : null
+            }));
+
+        res.json({
+            success: true,
+            data: { suggestions }
+        });
+
+    } catch (error) {
+        console.error("Suggestions error:", error);
+        res.status(500).json({
+            success: false,
+            error: { message: "Failed to fetch suggestions" }
+        });
+    }
 });
 
 export default router;
