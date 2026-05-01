@@ -15,12 +15,10 @@ export default function Home() {
   const [error, setError] = useState(null);
   const inputRef = useRef(null);
 
-  // 🔥 fetch trending ONCE
   useEffect(() => {
     fetchTrending();
   }, []);
 
-  // 🔥 DEBOUNCED SUGGESTIONS
   useEffect(() => {
     if (!search.trim() || search.trim().length < 2) {
       setSuggestions([]);
@@ -34,12 +32,11 @@ export default function Home() {
         const data = res?.data?.data?.suggestions || [];
         setSuggestions(data);
         setShowSuggestions(data.length > 0);
-      } catch (err) {
-        console.error('Suggestions error:', err);
+      } catch (_) {
         setSuggestions([]);
         setShowSuggestions(false);
       }
-    }, 300); // 300ms debounce
+    }, 300);
 
     return () => clearTimeout(timeoutId);
   }, [search]);
@@ -50,11 +47,10 @@ export default function Home() {
       setError(null);
 
       const res = await getRecommendations(null, null, 12);
-
       const data = res?.data?.data?.recommendations || [];
 
       if (!Array.isArray(data)) {
-        throw new Error("Invalid data format");
+        throw new Error('Invalid data format');
       }
 
       setTrending(data);
@@ -65,33 +61,28 @@ export default function Home() {
     }
   };
 
-  // 🔍 SEARCH (fully dynamic)
   const handleSearch = (e) => {
     e.preventDefault();
 
     const q = search.trim();
-
     if (!q) return;
 
     setShowSuggestions(false);
-    navigate(`/search?q=${encodeURIComponent(q)}&type=movie`);
+    navigate(`/search?q=${encodeURIComponent(q)}`);
   };
 
-  // Handle suggestion click
   const handleSuggestionClick = (suggestion) => {
     setSearch(suggestion.title);
     setShowSuggestions(false);
-    navigate(`/search?q=${encodeURIComponent(suggestion.title)}&type=movie`);
+    navigate(`/title/${suggestion.type}/${suggestion.id}`);
   };
 
-  // Handle input focus
   const handleInputFocus = () => {
     if (suggestions.length > 0) {
       setShowSuggestions(true);
     }
   };
 
-  // Handle input blur (delay to allow click on suggestions)
   const handleInputBlur = () => {
     setTimeout(() => setShowSuggestions(false), 150);
   };
@@ -107,7 +98,7 @@ export default function Home() {
         </h1>
 
         <p className="text-lg md:text-xl text-slate-400 mb-10">
-          Search any movie. Discover what’s actually worth watching.
+          Discover movies, series, and anime worth watching.
         </p>
 
         {/* SEARCH */}
@@ -121,7 +112,7 @@ export default function Home() {
                 onChange={(e) => setSearch(e.target.value)}
                 onFocus={handleInputFocus}
                 onBlur={handleInputBlur}
-                placeholder="Search movie name..."
+                placeholder="Search movies, series, anime, books..."
                 className="w-full px-5 py-3 rounded-xl bg-slate-800 border border-slate-600 text-white focus:outline-none focus:border-indigo-500"
               />
 

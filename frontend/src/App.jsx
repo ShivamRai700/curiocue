@@ -17,6 +17,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/search" element={<SearchResults />} />
+            <Route path="/title/:type/:id" element={<TitleDetails />} />
             <Route path="/title/:id" element={<TitleDetails />} />
             <Route path="/saved" element={<SavedList />} />
           </Routes>

@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import TitleCard from '../components/TitleCard';
-import LoadingSpinner from '../components/LoadingSpinner';
 import { searchTitles, handleApiError } from '../utils/api';
 
 export default function SearchResults() {
@@ -18,6 +17,7 @@ export default function SearchResults() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [pagination, setPagination] = useState(null);
+  const skeletonCards = useMemo(() => Array.from({ length: 8 }), []);
 
   useEffect(() => {
     performSearch();
@@ -28,9 +28,14 @@ export default function SearchResults() {
     setError(null);
     try {
       const res = await searchTitles(query, type, genre, mood, page);
-      console.log("API RESPONSE:", res.data);//added for debugging
-      setResults(res.data.data.results);
-      setPagination(res.data.data.pagination);
+      const responseData = res?.data?.data;
+
+      if (!responseData || !Array.isArray(responseData.results)) {
+        throw new Error('Unexpected API response');
+      }
+
+      setResults(responseData.results);
+      setPagination(responseData.pagination || null);
     } catch (err) {
       setError(handleApiError(err));
     } finally {
@@ -38,12 +43,21 @@ export default function SearchResults() {
     }
   };
 
-  const handleFilterChange = (newFilters) => {
+  const buildSearchUrl = ({ q = query, type: searchType = type, genre: searchGenre = genre, mood: searchMood = mood, page: searchPage = page }) => {
     const params = new URLSearchParams();
-    if (query) params.set('q', query);
-    if (newFilters.type) params.set('type', newFilters.type);
-    if (newFilters.genre) params.set('genre', newFilters.genre);
-    navigate(`/search?${params.toString()}`);
+    if (q) params.set('q', q);
+    if (searchType) params.set('type', searchType);
+    if (searchGenre) params.set('genre', searchGenre);
+    if (searchMood) params.set('mood', searchMood);
+    if (searchPage) params.set('page', searchPage);
+    return `/search?${params.toString()}`;
+  };
+
+  const handleFilterChange = (newFilters) => {
+    const nextType = newFilters.type ?? type;
+    const nextGenre = newFilters.genre ?? genre;
+    const nextMood = newFilters.mood ?? mood;
+    navigate(buildSearchUrl({ type: nextType, genre: nextGenre, mood: nextMood, page: '1' }));
   };
 
   return (
@@ -68,9 +82,6 @@ export default function SearchResults() {
           <option value="">All Types</option>
           <option value="movie">Movies</option>
           <option value="series">Series</option>
-          <option value="anime">Anime</option>
-          <option value="book">Books</option>
-          <option value="documentary">Documentaries</option>
         </select>
 
         <select
@@ -106,7 +117,18 @@ export default function SearchResults() {
           </button>
         </div>
       ) : loading ? (
-        <LoadingSpinner />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {skeletonCards.map((_, index) => (
+            <div key={index} className="animate-pulse rounded-3xl bg-slate-900 overflow-hidden shadow-lg">
+              <div className="h-96 bg-slate-800" />
+              <div className="p-4 space-y-3">
+                <div className="h-6 w-3/4 rounded bg-slate-700" />
+                <div className="h-4 w-1/2 rounded bg-slate-700" />
+                <div className="h-10 rounded bg-slate-800" />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : results.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-xl text-slate-400 mb-6">
@@ -134,8 +156,7 @@ export default function SearchResults() {
                 <button
                   onClick={() => {
                     const newPage = parseInt(page) - 1;
-                    handleFilterChange({ type, genre });
-                    navigate(`/search?q=${query}&page=${newPage}`);
+                    navigate(buildSearchUrl({ page: String(newPage) }));
                   }}
                   className="btn-secondary"
                 >
@@ -151,8 +172,7 @@ export default function SearchResults() {
                 <button
                   onClick={() => {
                     const newPage = parseInt(page) + 1;
-                    handleFilterChange({ type, genre });
-                    navigate(`/search?q=${query}&page=${newPage}`);
+                    navigate(buildSearchUrl({ page: String(newPage) }));
                   }}
                   className="btn-secondary"
                 >

@@ -5,36 +5,42 @@ const router = express.Router();
 const TMDB_BASE = "https://api.themoviedb.org/3";
 const IMAGE_BASE = "https://image.tmdb.org/t/p/w500";
 
+const formatTitleResponse = (item, type) => ({
+  id: item.id,
+  type,
+  title: item.title || item.name || 'Unknown Title',
+  year: (item.release_date || item.first_air_date)?.split('-')[0] || null,
+  rating: item.vote_average,
+  image: item.poster_path ? IMAGE_BASE + item.poster_path : null,
+  summary: item.overview || '',
+  genre: item.genres?.map((g) => g.name) || []
+});
+
+const fetchTmdbJson = async (url) => {
+  const response = await fetch(url);
+  return response.json();
+};
+
 // 🔥 GET TITLE DETAILS
-router.get('/:id', async (req, res) => {
+router.get('/:type/:id', async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id, type } = req.params;
+    const requestedType = type === 'series' ? 'series' : 'movie';
+    const endpoint = requestedType === 'series' ? 'tv' : 'movie';
 
-    const url = `${TMDB_BASE}/movie/${id}?api_key=${process.env.TMDB_API_KEY}`;
+    const url = `${TMDB_BASE}/${endpoint}/${id}?api_key=${process.env.TMDB_API_KEY}`;
+    const item = await fetchTmdbJson(url);
 
-    const response = await fetch(url);
-    const movie = await response.json();
-
-    if (!movie || movie.status_code) {
+    if (!item || item.status_code) {
       return res.status(404).json({
         success: false,
-        error: { message: "Title not found" }
+        error: { message: 'Title not found' }
       });
     }
 
     res.json({
       success: true,
-      data: {
-        id: movie.id,
-        title: movie.title,
-        year: movie.release_date?.split("-")[0],
-        rating: movie.vote_average,
-        image: movie.poster_path
-          ? IMAGE_BASE + movie.poster_path
-          : null,
-        summary: movie.overview,
-        genres: movie.genres?.map(g => g.name)
-      }
+      data: formatTitleResponse(item, requestedType)
     });
 
   } catch (error) {
@@ -46,27 +52,68 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// 🔥 SIMILAR MOVIES
-router.get('/:id/similar', async (req, res) => {
+// 🔥 LEGACY TITLE DETAILS FALLBACK
+router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    const requestedType = req.query.type === 'series' ? 'series' : 'movie';
+    const endpoint = requestedType === 'series' ? 'tv' : 'movie';
 
-    const url = `${TMDB_BASE}/movie/${id}/similar?api_key=${process.env.TMDB_API_KEY}`;
+    let item = await fetchTmdbJson(`${TMDB_BASE}/${endpoint}/${id}?api_key=${process.env.TMDB_API_KEY}`);
+    let type = requestedType;
 
-    const response = await fetch(url);
-    const data = await response.json();
+    if (!item || item.status_code) {
+      const fallbackEndpoint = requestedType === 'series' ? 'movie' : 'tv';
+      item = await fetchTmdbJson(`${TMDB_BASE}/${fallbackEndpoint}/${id}?api_key=${process.env.TMDB_API_KEY}`);
+      type = requestedType === 'series' ? 'movie' : 'series';
+    }
 
-    const results = data.results.map(movie => ({
-      id: movie.id,
-      title: movie.title,
-      image: movie.poster_path
-        ? IMAGE_BASE + movie.poster_path
-        : null
-    }));
+    if (!item || item.status_code) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Title not found' }
+      });
+    }
+
+    res.json({
+      success: true,
+      data: formatTitleResponse(item, type)
+    });
+  } catch (error) {
+    console.error("Legacy title error:", error);
+    res.status(500).json({
+      success: false,
+      error: { message: "Failed to fetch legacy title" }
+    });
+  }
+});
+
+// 🔥 SIMILAR MOVIES / SERIES
+router.get('/:type/:id/similar', async (req, res) => {
+  try {
+    const { id, type } = req.params;
+    const requestedType = type === 'series' ? 'series' : 'movie';
+    const endpoint = requestedType === 'series' ? 'tv' : 'movie';
+
+    let data = await fetchTmdbJson(`${TMDB_BASE}/${endpoint}/${id}/similar?api_key=${process.env.TMDB_API_KEY}`);
+
+    if (!data || data.status_code) {
+      const fallbackEndpoint = requestedType === 'series' ? 'movie' : 'tv';
+      data = await fetchTmdbJson(`${TMDB_BASE}/${fallbackEndpoint}/${id}/similar?api_key=${process.env.TMDB_API_KEY}`);
+    }
+
+    const results = Array.isArray(data.results)
+      ? data.results.map((item) => ({
+          id: item.id,
+          title: item.title || item.name || 'Unknown Title',
+          image: item.poster_path ? IMAGE_BASE + item.poster_path : null
+        }))
+      : [];
 
     res.json({ success: true, data: results });
 
   } catch (error) {
+    console.error("Similar titles error:", error);
     res.status(500).json({
       success: false,
       error: { message: "Failed to fetch similar titles" }

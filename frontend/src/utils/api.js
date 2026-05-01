@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
+const API_BASE = import.meta.env.VITE_API_URL ||'/api';
 
 export const apiClient = axios.create({
   baseURL: API_BASE,
@@ -21,12 +21,12 @@ export const getSearchSuggestions = (query) => {
 };
 
 // Title Details
-export const getTitleDetails = (id) => {
-  return apiClient.get(`/title/${id}`);
+export const getTitleDetails = (type, id) => {
+  return apiClient.get(`/title/${type}/${id}`);
 };
 
-export const getSimilarTitles = (id) => {
-  return apiClient.get(`/title/${id}/similar`);
+export const getSimilarTitles = (type, id) => {
+  return apiClient.get(`/title/${type}/${id}/similar`);
 };
 
 // Explanations

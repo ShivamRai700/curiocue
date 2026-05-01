@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import {
   getTitleDetails,
   getSimilarTitles,
@@ -25,7 +25,9 @@ import ExplainSection from '../components/ExplainSection';
 import TitleCard from '../components/TitleCard';
 
 export default function TitleDetails() {
-  const { id } = useParams();
+  const { type, id } = useParams();
+  const [searchParams] = useSearchParams();
+  const requestedType = type || searchParams.get('type') || 'movie';
 
   const [title, setTitle] = useState(null);
   const [similar, setSimilar] = useState([]);
@@ -40,7 +42,7 @@ export default function TitleDetails() {
 
   useEffect(() => {
     fetchDetails();
-  }, [id]);
+  }, [id, requestedType]);
 
   const fetchDetails = async () => {
     setLoading(true);
@@ -48,14 +50,14 @@ export default function TitleDetails() {
 
     try {
       const [titleRes, similarRes] = await Promise.all([
-        getTitleDetails(id),
-        getSimilarTitles(id)
+        getTitleDetails(requestedType, id),
+        getSimilarTitles(requestedType, id)
       ]);
 
       const titleData = titleRes.data.data;
 
       setTitle(titleData);
-      setSimilar(similarRes.data.data.similar || []);
+      setSimilar(similarRes.data.data || []);
       setIsSaved(isTitleSaved(id));
 
       addToHistory(titleData);

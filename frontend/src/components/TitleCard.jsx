@@ -38,11 +38,18 @@ export default function TitleCard({ title, showActions = true }) {
     return emojis[type] || "🎬";
   };
 
+  const displayTitle = title.title || 'Unknown Title';
+  const wrapperClasses = "card card-hover overflow-hidden group transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl";
+  const Wrapper = title.type === 'book' ? 'div' : Link;
+  const wrapperProps = title.type === 'book'
+    ? { className: wrapperClasses }
+    : {
+        to: title.type ? `/title/${title.type}/${title.id}` : `/title/movie/${title.id}`,
+        className: wrapperClasses
+      };
+
   return (
-    <Link
-      to={`/title/${title.id}`}
-      className="card card-hover overflow-hidden group"
-    >
+    <Wrapper {...wrapperProps}>
       <div className="relative overflow-hidden h-96 bg-slate-700">
         {/* Image */}
         <img
@@ -51,7 +58,9 @@ export default function TitleCard({ title, showActions = true }) {
               ? title.image
               : "https://placehold.co/500x750?text=No+Image"
           }
-          alt={title.title}
+          alt={displayTitle}
+          loading="lazy"
+          decoding="async"
           className="w-full h-full object-cover"
           onError={(e) => {
             e.target.onerror = null;
@@ -89,7 +98,7 @@ export default function TitleCard({ title, showActions = true }) {
       {/* Content */}
       <div className="p-4 flex flex-col h-32">
         <h3 className="font-bold text-lg mb-2 truncate group-hover:text-indigo-300 transition">
-          {title.title}
+          {title.title || 'Unknown Title'}
         </h3>
 
         {title.genre && (
@@ -125,6 +134,6 @@ export default function TitleCard({ title, showActions = true }) {
           </div>
         )}
       </div>
-    </Link>
+    </Wrapper>
   );
 }
