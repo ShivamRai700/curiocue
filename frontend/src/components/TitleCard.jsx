@@ -7,7 +7,10 @@ import {
   isTitleSaved,
 } from "../utils/storage";
 import { shareNative } from "../utils/shareUtils";
-import { BOOK_PLACEHOLDER_IMAGE, getBookImageCandidates } from "../utils/books";
+import {
+  BOOK_PLACEHOLDER_IMAGE,
+  getBookImageCandidates,
+} from "../utils/books";
 
 const FALLBACK_IMAGE = "https://placehold.co/500x750?text=No+Image";
 
@@ -26,22 +29,47 @@ const getTypeLabel = (title) => {
 };
 
 const getTypeRoute = (title) => {
-  if (title.type === "book") {
-    return `/book/${title.id}`;
-  }
-
-  if (title.type === "anime") {
-    return `/title/series/${title.id}`;
-  }
-
-  return title.type ? `/title/${title.type}/${title.id}` : `/title/movie/${title.id}`;
+  if (title.type === "book") return `/book/${title.id}`;
+  if (title.type === "anime") return `/title/series/${title.id}`;
+  return title.type
+    ? `/title/${title.type}/${title.id}`
+    : `/title/movie/${title.id}`;
 };
 
 export default function TitleCard({ title, showActions = true }) {
-  const [isSaved, setIsSaved] = React.useState(isTitleSaved(title.id));
+  const [isSaved, setIsSaved] = React.useState(
+    isTitleSaved(title.id)
+  );
 
-  const handleSave = (event) => {
-    event.preventDefault();
+  const displayTitle = title.title || "Unknown Title";
+  const typeLabel = getTypeLabel(title);
+
+  const imageCandidates = React.useMemo(
+    () =>
+      title.type === "book"
+        ? getBookImageCandidates(title)
+        : [title.image, FALLBACK_IMAGE].filter(Boolean),
+    [title]
+  );
+
+  const [cardImage, setCardImage] = React.useState(
+    imageCandidates[0] ||
+      (title.type === "book"
+        ? BOOK_PLACEHOLDER_IMAGE
+        : FALLBACK_IMAGE)
+  );
+
+  React.useEffect(() => {
+    setCardImage(
+      imageCandidates[0] ||
+        (title.type === "book"
+          ? BOOK_PLACEHOLDER_IMAGE
+          : FALLBACK_IMAGE)
+    );
+  }, [imageCandidates, title.type]);
+
+  const handleSave = (e) => {
+    e.preventDefault();
 
     if (isSaved) {
       removeTitleFromList(title.id);
@@ -58,69 +86,72 @@ export default function TitleCard({ title, showActions = true }) {
     return "text-orange-400";
   };
 
-  const displayTitle = title.title || "Unknown Title";
-  const typeLabel = getTypeLabel(title);
-  const imageCandidates = React.useMemo(
-    () => (title.type === "book" ? getBookImageCandidates(title) : [title.image, FALLBACK_IMAGE].filter(Boolean)),
-    [title]
-  );
-  const [cardImage, setCardImage] = React.useState(imageCandidates[0] || FALLBACK_IMAGE);
   const metadata = [
     title.type === "book"
-      ? (title.publishedDate ? `Published: ${title.publishedDate}` : title.year ? `Published: ${title.year}` : null)
-      : title.year ? `Year: ${title.year}` : null,
+      ? title.publishedDate
+        ? `Published: ${title.publishedDate}`
+        : title.year
+        ? `Published: ${title.year}`
+        : null
+      : title.year
+      ? `Year: ${title.year}`
+      : null,
     typeof title.rating === "number" && title.rating > 0
       ? `Rating: ${title.rating.toFixed(1)}`
       : null,
   ].filter(Boolean);
-  const bookAuthors = Array.isArray(title.authors) ? title.authors.slice(0, 2).join(", ") : "";
 
-  React.useEffect(() => {
-    setCardImage(imageCandidates[0] || (title.type === "book" ? BOOK_PLACEHOLDER_IMAGE : FALLBACK_IMAGE));
-  }, [imageCandidates, title.type]);
+  const bookAuthors = Array.isArray(title.authors)
+    ? title.authors.slice(0, 2).join(", ")
+    : "";
 
   return (
     <Link
       to={getTypeRoute(title)}
-      className="card card-hover overflow-hidden group transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl"
+      className="card flex flex-col overflow-hidden rounded-3xl bg-slate-900 shadow-lg transition hover:-translate-y-1 hover:shadow-xl"
     >
-      <div className="relative overflow-hidden h-96 bg-slate-700">
+      {/* IMAGE */}
+      <div className="card-image aspect-[2/3] bg-slate-700 overflow-hidden">
         <img
-          src={cardImage && cardImage.trim() !== "" ? cardImage : FALLBACK_IMAGE}
+          src={cardImage}
           alt={displayTitle}
           loading="lazy"
-          decoding="async"
-          className="w-full h-full object-cover"
-          onError={(event) => {
-            event.target.onerror = null;
-            const currentIndex = imageCandidates.indexOf(cardImage);
-            const nextImage = imageCandidates[currentIndex + 1];
-            event.target.src = nextImage || (title.type === "book" ? BOOK_PLACEHOLDER_IMAGE : FALLBACK_IMAGE);
-            if (nextImage) {
-              setCardImage(nextImage);
-            }
+          className="w-full h-full object-contain"
+          onError={(e) => {
+            e.target.onerror = null;
+            const index = imageCandidates.indexOf(cardImage);
+            const next = imageCandidates[index + 1];
+            e.target.src =
+              next ||
+              (title.type === "book"
+                ? BOOK_PLACEHOLDER_IMAGE
+                : FALLBACK_IMAGE);
+            if (next) setCardImage(next);
           }}
         />
 
-        {typeLabel && <div className="absolute top-3 left-3 badge">{typeLabel}</div>}
+        {typeLabel && (
+          <div className="absolute top-3 left-3 badge">
+            {typeLabel}
+          </div>
+        )}
       </div>
 
-      <div className="p-4 flex flex-col min-h-[9.5rem]">
-        <h3 className="font-bold text-lg mb-2 text-white group-hover:text-indigo-300 transition truncate-lines-2">
+      {/* CONTENT */}
+      <div className="p-4 flex flex-col flex-grow">
+        <h3 className="font-bold text-lg mb-2 text-white truncate-lines-2">
           {displayTitle}
         </h3>
 
+        {/* METADATA */}
         <div className="flex flex-wrap gap-2 mb-3">
-          {typeLabel && (
-            <span className="text-xs font-medium uppercase tracking-wide text-indigo-300">
-              {typeLabel}
-            </span>
-          )}
           {metadata.map((item) => (
             <span
               key={item}
               className={`text-xs font-medium ${
-                item.startsWith("Rating:") ? getRatingColor(title.rating) : "text-slate-300"
+                item.startsWith("Rating:")
+                  ? getRatingColor(title.rating)
+                  : "text-slate-300"
               }`}
             >
               {item}
@@ -128,41 +159,44 @@ export default function TitleCard({ title, showActions = true }) {
           ))}
         </div>
 
+        {/* AUTHORS (BOOKS ONLY) */}
         {title.type === "book" && bookAuthors && (
           <p className="text-sm text-slate-300 mb-3 truncate-lines-2">
             {bookAuthors}
           </p>
         )}
 
-        {Array.isArray(title.genre) && title.genre.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-3">
-            {title.genre.slice(0, 2).map((genre) => (
-              <span
-                key={genre}
-                className="text-xs text-slate-400 truncate max-w-full"
-              >
-                {genre}
-              </span>
-            ))}
-          </div>
-        )}
+        {/* GENRES */}
+        {Array.isArray(title.genre) &&
+          title.genre.length > 0 && (
+            <div className="flex flex-wrap gap-1 mb-3">
+              {title.genre.slice(0, 2).map((g) => (
+                <span
+                  key={g}
+                  className="text-xs text-slate-400"
+                >
+                  {g}
+                </span>
+              ))}
+            </div>
+          )}
 
+        {/* ACTIONS */}
         {showActions && (
-          <div className="card-actions mt-auto pt-3 border-t border-slate-700">
+          <div className="card-actions mt-auto pt-3 border-t border-slate-700 flex gap-2">
             <button
               onClick={handleSave}
-              className="card-action-button bg-slate-700 hover:bg-slate-600 text-sm font-medium"
-              title={isSaved ? "Remove from saved" : "Save"}
+              className="flex-1 bg-slate-700 hover:bg-slate-600 text-sm font-medium py-2 rounded"
             >
               {isSaved ? "Saved" : "Save"}
             </button>
+
             <button
-              onClick={(event) => {
-                event.preventDefault();
+              onClick={(e) => {
+                e.preventDefault();
                 shareNative(title);
               }}
-              className="card-action-button bg-slate-700 hover:bg-slate-600 text-sm font-medium"
-              title="Share"
+              className="flex-1 bg-slate-700 hover:bg-slate-600 text-sm font-medium py-2 rounded"
             >
               Share
             </button>
