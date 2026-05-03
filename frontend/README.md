@@ -24,6 +24,8 @@ npm run build
 ### Pages
 - **Home**: Hero section, content type filters, trending titles
 - **Search**: Advanced search with filters by genre, type, and mood
+- **Home**: Hero section, search bar with suggestions, trending titles.
+- **Search**: Advanced search with filters by genre and type.
 - **Title Details**: Full information, themes, ending explanations, availability
 - **Saved List**: Your personal collection of titles
 
@@ -31,6 +33,7 @@ npm run build
 - **Header**: Navigation and search bar
 - **TitleCard**: Reusable title display with save/share
 - **LoadingSpinner**: Beautiful loading state
+- **LoadingSpinner**: Beautiful loading state (inlined in pages).
 - **AvailabilityCard**: Where to legally watch/read
 - **ExplainSection**: Themes, tricky words, ending explanations
 - **Footer**: Links and information

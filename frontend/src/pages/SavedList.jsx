@@ -24,7 +24,7 @@ export default function SavedList() {
           Start exploring and save your favorite titles!
         </p>
         <button
-          onClick={() => navigate('/search')}
+          onClick={() => navigate('/')}
           className="btn-primary"
         >
           🔍 Start Exploring
@@ -53,7 +53,7 @@ export default function SavedList() {
 
       <div className="mt-12 text-center">
         <button
-          onClick={() => navigate('/search')}
+          onClick={() => navigate('/')}
           className="btn-secondary"
         >
           Explore More

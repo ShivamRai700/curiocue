@@ -16,6 +16,8 @@ CurioCue is a full-stack web application that revolutionizes how users discover 
 ### 🔍 Intelligent Search
 - **Multi-type search** across movies, series, anime, and books
 - **Real-time autocomplete** suggestions
+- **Multi-type search** across movies, series, anime, and books.
+- **Real-time autocomplete** suggestions.
 - **Smart filtering** by genre, type, and mood
 - **Fast, responsive search** with skeleton loading states
 
@@ -108,6 +110,7 @@ CurioCue/
 │   │   │   ├── AvailabilityCard.jsx # Where to watch/read
 │   │   │   ├── LoadingSpinner.jsx   # Loading state
 │   │   │   └── ...
+│   │   │   └── LoadingSpinner (inlined in pages)
 │   │   ├── utils/             # Helper functions
 │   │   │   ├── api.js         # Axios instance & requests
 │   │   │   ├── storage.js     # LocalStorage wrapper

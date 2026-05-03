@@ -2,7 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ===== GLOBAL ===== */
 html {
   scroll-behavior: smooth;
 }
@@ -12,68 +11,41 @@ body {
   overflow-x: hidden;
 }
 
-/* Prevent layout issues */
-* {
-  box-sizing: border-box;
-}
-
-/* ===== TYPOGRAPHY ===== */
+/* Typography */
 h1, h2, h3, h4, h5, h6 {
   @apply font-bold;
 }
 
 h1 {
-  @apply text-3xl sm:text-4xl md:text-5xl;
+  @apply text-4xl md:text-5xl;
 }
 
 h2 {
-  @apply text-xl sm:text-2xl md:text-3xl;
+  @apply text-2xl md:text-3xl;
 }
 
 h3 {
-  @apply text-lg sm:text-xl md:text-2xl;
+  @apply text-xl md:text-2xl;
 }
 
-/* ===== IMAGE SAFETY ===== */
-img {
-  max-width: 100%;
-  height: auto;
-  display: block;
-}
-
-/* ===== CARDS ===== */
+/* Cards */
 .card {
   @apply bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl border border-slate-700 hover:border-indigo-500 transition-all duration-300 shadow-lg hover:shadow-indigo-500/20;
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-height: 100%;
 }
 
-/* Hover */
 .card-hover {
   @apply hover:scale-105 transform transition-transform duration-300 cursor-pointer;
 }
 
-/* Responsive Grid */
 .cards-container {
   display: grid;
-  gap: 16px;
-  grid-template-columns: 1fr;
+  align-items: stretch;
 }
 
-@media (min-width: 640px) {
-  .cards-container {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (min-width: 1024px) {
-  .cards-container {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-/* ===== CARD IMAGE ===== */
 .card-image {
   width: 100%;
   aspect-ratio: 2 / 3;
@@ -81,21 +53,19 @@ img {
   background-color: #000;
 }
 
-/* Prevent cropping + distortion */
 .card-image img {
   width: 100%;
   height: 100%;
   object-fit: contain;
 }
 
-/* ===== CARD CONTENT ===== */
 .card-content {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
 }
 
-/* ===== BUTTONS ===== */
+/* Buttons */
 .btn-primary {
   @apply px-6 py-3 bg-gradient-to-r from-indigo-600 to-indigo-500 rounded-lg font-semibold hover:from-indigo-500 hover:to-indigo-400 transition-all duration-300 transform hover:scale-105 active:scale-95;
 }
@@ -108,57 +78,34 @@ img {
   @apply px-6 py-3 border-2 border-indigo-500 text-indigo-400 rounded-lg font-semibold hover:bg-indigo-500/10 transition-all duration-300;
 }
 
-/* ===== CARD ACTIONS (FIXED ALIGNMENT) ===== */
 .card-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: auto; /* push to bottom */
+  @apply flex gap-[10px];
+  margin-top: auto;
 }
 
 .card-action-button {
+  @apply flex-1 min-h-[42px] px-3 py-2 rounded-lg transition;
   flex: 1;
-  min-height: 42px;
-  @apply px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-sm font-medium transition;
 }
 
-/* ===== BADGE ===== */
+/* Badge */
 .badge {
   @apply inline-block px-3 py-1 bg-indigo-600/20 text-indigo-300 rounded-full text-sm font-medium border border-indigo-500/30;
 }
 
-/* ===== INPUT ===== */
+/* Loading spinner */
+.spinner {
+  @apply inline-block w-4 h-4 border-2 border-slate-300 border-t-indigo-500 rounded-full animate-spin;
+}
+
+/* Input */
 input[type="text"],
 input[type="search"],
 textarea {
   @apply bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-300;
 }
 
-/* ===== LOADER ===== */
-.spinner {
-  @apply inline-block w-4 h-4 border-2 border-slate-300 border-t-indigo-500 rounded-full animate-spin;
-}
-
-/* ===== TEXT TRUNCATION ===== */
-.truncate-lines-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.truncate-lines-3 {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* ===== UTIL ===== */
-.glass {
-  @apply backdrop-blur-md bg-white/10 border border-white/20;
-}
-
-/* ===== ANIMATION ===== */
+/* Animations */
 @keyframes float {
   0%, 100% {
     transform: translateY(0px);
@@ -170,4 +117,33 @@ textarea {
 
 .animate-float {
   animation: float 3s ease-in-out infinite;
+}
+
+/* Gradients */
+.gradient-text {
+  @apply bg-gradient-to-r from-indigo-400 via-pink-400 to-indigo-600 bg-clip-text text-transparent;
+}
+
+/* Utility */
+.glass {
+  @apply backdrop-blur-md bg-white/10 border border-white/20;
+}
+
+.truncate-lines-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+.truncate-lines-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }

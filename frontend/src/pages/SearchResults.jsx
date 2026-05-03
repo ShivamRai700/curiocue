@@ -28,7 +28,6 @@ export default function SearchResults() {
   const [error, setError] = useState(null);
   const [pagination, setPagination] = useState(null);
   const [typeFilter, setTypeFilter] = useState("all");
-
   const skeletonCards = useMemo(() => Array.from({ length: 8 }), []);
 
   useEffect(() => {
@@ -73,24 +72,14 @@ export default function SearchResults() {
 
   const books = normalizedResults
     .filter((item) => item.type === "book")
-    .sort(
-      (a, b) =>
-        (b.score || b.relevance || 0) -
-        (a.score || a.relevance || 0)
-    );
-
+    .sort((a, b) => (b.score || b.relevance || 0) - (a.score || a.relevance || 0));
   const bestBook = books.length > 0 ? books[0] : null;
-  const nonBooks = normalizedResults.filter(
-    (item) => item.type !== "book"
-  );
-
-  const finalResults = bestBook
-    ? [...nonBooks, bestBook]
-    : nonBooks;
+  const nonBooks = normalizedResults.filter((item) => item.type !== "book");
+  const finalResults = bestBook ? [...nonBooks, bestBook] : nonBooks;
 
   const filteredResults = finalResults.filter((item) => {
     if (typeFilter === "all") return true;
-    return item.type === typeFilter;
+    return item.type?.toLowerCase() === typeFilter;
   });
 
   const buildSearchUrl = ({
@@ -106,12 +95,9 @@ export default function SearchResults() {
     if (searchType) params.set("type", searchType);
     if (searchGenre) params.set("genre", searchGenre);
     if (searchMood) params.set("mood", searchMood);
-    if (searchPage && searchPage !== "1")
-      params.set("page", searchPage);
+    if (searchPage && searchPage !== "1") params.set("page", searchPage);
 
-    return `/search${
-      params.toString() ? `?${params.toString()}` : ""
-    }`;
+    return `/search${params.toString() ? `?${params.toString()}` : ""}`;
   };
 
   const handleFilterChange = (newFilters) => {
@@ -127,24 +113,21 @@ export default function SearchResults() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
-      {/* HEADER */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-2">
           {query ? `Results for "${query}"` : "Browse All"}
         </h1>
         <p className="text-slate-400">
-          {pagination
-            ? `Found ${pagination.total} results`
-            : "Searching across titles"}
+          {pagination ? `Found ${pagination.total} results` : "Searching across titles"}
         </p>
       </div>
 
-      {/* FILTERS */}
       <div className="mb-8 flex flex-wrap gap-4">
         <select
           value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value)}
-          className="px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white"
+          onChange={(event) => setTypeFilter(event.target.value)}
+          className="px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white focus:border-indigo-500"
+          aria-label="Content type"
         >
           {TYPE_OPTIONS.map((option) => (
             <option key={option.value || "all"} value={option.value}>
@@ -155,10 +138,8 @@ export default function SearchResults() {
 
         <select
           value={genre}
-          onChange={(e) =>
-            handleFilterChange({ genre: e.target.value })
-          }
-          className="px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white"
+          onChange={(event) => handleFilterChange({ genre: event.target.value })}
+          className="px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white focus:border-indigo-500"
         >
           <option value="">All Genres</option>
           <option value="action">Action</option>
@@ -182,7 +163,6 @@ export default function SearchResults() {
         )}
       </div>
 
-      {/* ERROR */}
       {error ? (
         <div className="text-center py-12">
           <p className="text-red-400 mb-4">{error}</p>
@@ -191,89 +171,64 @@ export default function SearchResults() {
           </button>
         </div>
       ) : loading ? (
-        /* LOADING SKELETON */
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="cards-container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {skeletonCards.map((_, index) => (
-            <div
-              key={index}
-              className="animate-pulse rounded-3xl bg-slate-900 overflow-hidden shadow-lg flex flex-col"
-            >
-              <div className="aspect-[2/3] bg-slate-800" />
-
+            <div key={index} className="animate-pulse rounded-3xl bg-slate-900 overflow-hidden shadow-lg">
+              <div className="card-image bg-slate-800" />
               <div className="p-4 space-y-3 flex flex-col flex-grow">
                 <div className="h-6 w-3/4 rounded bg-slate-700" />
                 <div className="h-4 w-1/2 rounded bg-slate-700" />
-
-                <div className="mt-auto flex gap-2">
-                  <div className="h-10 flex-1 rounded bg-slate-800" />
-                  <div className="h-10 flex-1 rounded bg-slate-800" />
-                </div>
+                <div className="h-10 rounded bg-slate-800" />
               </div>
             </div>
           ))}
         </div>
       ) : filteredResults.length === 0 ? (
-        /* EMPTY */
         <div className="text-center py-12">
           <p className="text-xl text-slate-400 mb-6">
             No results found. Try a different search.
           </p>
-          <button
-            onClick={() => navigate("/search")}
-            className="btn-primary"
-          >
+          <button onClick={() => navigate("/")} className="btn-primary">
             Back to Home
           </button>
         </div>
       ) : (
-        /* RESULTS */
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="cards-container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {filteredResults.map((title) => (
-              <TitleCard
-                key={`${title.type}-${title.id}`}
-                title={title}
-              />
+              <TitleCard key={`${title.type}-${title.id}`} title={title} />
             ))}
           </div>
 
-          {/* PAGINATION */}
-          {pagination &&
-            (pagination.hasMore || parseInt(page, 10) > 1) && (
-              <div className="flex justify-center gap-4 mt-8">
-                {parseInt(page, 10) > 1 && (
-                  <button
-                    onClick={() => {
-                      const newPage = parseInt(page, 10) - 1;
-                      navigate(
-                        buildSearchUrl({ page: String(newPage) })
-                      );
-                    }}
-                    className="btn-secondary"
-                  >
-                    Previous
-                  </button>
-                )}
+          {pagination && (pagination.hasMore || parseInt(page, 10) > 1) && (
+            <div className="flex justify-center gap-4 mt-8">
+              {parseInt(page, 10) > 1 && (
+                <button
+                  onClick={() => {
+                    const newPage = parseInt(page, 10) - 1;
+                    navigate(buildSearchUrl({ page: String(newPage) }));
+                  }}
+                  className="btn-secondary"
+                >
+                  Previous
+                </button>
+              )}
 
-                <span className="py-3 px-6 text-slate-300">
-                  Page {page}
-                </span>
+              <span className="py-3 px-6 text-slate-300">Page {page}</span>
 
-                {pagination.hasMore && (
-                  <button
-                    onClick={() => {
-                      const newPage = parseInt(page, 10) + 1;
-                      navigate(
-                        buildSearchUrl({ page: String(newPage) })
-                      );
-                    }}
-                    className="btn-secondary"
-                  >
-                    Next
-                  </button>
-                )}
-              </div>
-            )}
+              {pagination.hasMore && (
+                <button
+                  onClick={() => {
+                    const newPage = parseInt(page, 10) + 1;
+                    navigate(buildSearchUrl({ page: String(newPage) }));
+                  }}
+                  className="btn-secondary"
+                >
+                  Next
+                </button>
+              )}
+            </div>
+          )}
         </>
       )}
     </div>
