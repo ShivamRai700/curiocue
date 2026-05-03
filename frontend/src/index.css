@@ -56,7 +56,7 @@ h3 {
 .card-image img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
 }
 
 .card-content {
@@ -146,4 +146,9 @@ img {
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.detail-card {
+  height: auto !important;
+  min-height: auto !important;
 }

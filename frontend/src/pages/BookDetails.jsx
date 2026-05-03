@@ -285,7 +285,7 @@ export default function BookDetails() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
-      <div className="grid md:grid-cols-[280px,1fr] gap-8">
+      <div className="grid md:grid-cols-[280px,1fr] gap-8 items-start">
         <div>
           <img
             src={coverImage}
@@ -381,7 +381,7 @@ export default function BookDetails() {
           )}
 
           {Array.isArray(book.authors) && book.authors.length > 0 && (
-            <div className="card p-6">
+            <div className="card detail-card p-6">
               <h2 className="text-2xl font-bold mb-4">Author</h2>
               <p className="text-slate-300 leading-relaxed">
                 {book.authors.join(", ")}
@@ -389,7 +389,7 @@ export default function BookDetails() {
             </div>
           )}
 
-          <div className="card p-6">
+          <div className="card detail-card p-6">
             <h2 className="text-2xl font-bold mb-4">Introduction</h2>
             {hasDescription ? (
               <div
@@ -408,7 +408,7 @@ export default function BookDetails() {
           </div>
 
           {(book.industryIdentifiers?.length > 0 || book.previewLink || book.infoLink) && (
-            <div className="card p-6">
+            <div className="card detail-card p-6">
               <h2 className="text-2xl font-bold mb-4">More Details</h2>
               <div className="grid sm:grid-cols-2 gap-3 text-slate-300">
                 {book.industryIdentifiers?.map((identifier) => (
