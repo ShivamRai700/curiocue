@@ -9,28 +9,30 @@ import {
   saveTitleToList,
 } from "../utils/storage";
 import { copyToClipboard, shareNative } from "../utils/shareUtils";
-import {
-  getAIExplanation,
-  getBookDetails,
-  handleApiError,
-} from "../utils/api";
+import { getAIExplanation, getBookDetails, handleApiError } from "../utils/api";
 import {
   BOOK_PLACEHOLDER_IMAGE,
   cleanBookId,
   getBookImageCandidates,
 } from "../utils/books";
 
-const stripHtml = (value = "") => value.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+const stripHtml = (value = "") =>
+  value
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 const WIKIPEDIA_NAME_PATTERN = /^[A-Za-z][A-Za-z\s.'-]{1,120}$/;
 const SCREEN_LANGUAGE_REGEX =
   /\b(film|movie|cinematic|screen|watch|watching|viewing|episode|director|performance|scene|adaptation|show)\b/i;
 
 const buildFallbackExplanation = (book) => {
   const descriptionText = stripHtml(book.description || "");
-  const summarySource = descriptionText || "This book does not have a publisher summary yet.";
-  const themes = Array.isArray(book.categories) && book.categories.length > 0
-    ? book.categories.slice(0, 4)
-    : [book.languageLabel || "General fiction or nonfiction"];
+  const summarySource =
+    descriptionText || "This book does not have a publisher summary yet.";
+  const themes =
+    Array.isArray(book.categories) && book.categories.length > 0
+      ? book.categories.slice(0, 4)
+      : [book.languageLabel || "General fiction or nonfiction"];
 
   const valuePoints = [
     book.pageCount ? `${book.pageCount} pages of material` : null,
@@ -43,9 +45,10 @@ const buildFallbackExplanation = (book) => {
   return {
     summary: summarySource,
     themes,
-    whyWorthIt: valuePoints.length > 0
-      ? `It stands out for ${valuePoints.join(", ")}.`
-      : "It is worth exploring if the subject, author, or premise matches what you want to read next.",
+    whyWorthIt:
+      valuePoints.length > 0
+        ? `It stands out for ${valuePoints.join(", ")}.`
+        : "It is worth exploring if the subject, author, or premise matches what you want to read next.",
     readingStyle: book.maturityRating
       ? `Reading profile: ${book.maturityRating}.`
       : book.categories?.length
@@ -55,24 +58,25 @@ const buildFallbackExplanation = (book) => {
 };
 
 const buildIntroductionFallback = (book) => {
-  const authors = Array.isArray(book.authors) && book.authors.length > 0
-    ? book.authors.join(", ")
-    : "an unknown author";
-  const categories = Array.isArray(book.categories) && book.categories.length > 0
-    ? book.categories.slice(0, 2).join(" and ")
-    : "literature";
+  const authors =
+    Array.isArray(book.authors) && book.authors.length > 0
+      ? book.authors.join(", ")
+      : "an unknown author";
+  const categories =
+    Array.isArray(book.categories) && book.categories.length > 0
+      ? book.categories.slice(0, 2).join(" and ")
+      : "literature";
   const publishedLine = book.publishedDate
     ? ` first published in ${book.publishedDate}`
     : "";
-  const publisherLine = book.publisher
-    ? ` by ${book.publisher}`
-    : "";
+  const publisherLine = book.publisher ? ` by ${book.publisher}` : "";
   const pagesLine = book.pageCount
     ? ` This edition spans ${book.pageCount} pages`
     : "";
-  const ratingLine = typeof book.averageRating === "number"
-    ? ` and holds a reader rating of ${book.averageRating.toFixed(1)}`
-    : "";
+  const ratingLine =
+    typeof book.averageRating === "number"
+      ? ` and holds a reader rating of ${book.averageRating.toFixed(1)}`
+      : "";
 
   return `${book.title} by ${authors} is a notable ${categories} book${publishedLine}${publisherLine}.${pagesLine}${ratingLine} It stands out for its literary presence, enduring themes, and the kind of reading experience that stays with you after the final page.`;
 };
@@ -81,8 +85,12 @@ const infoChips = (book) => [
   book.publishedDate ? `Published: ${book.publishedDate}` : null,
   book.pageCount ? `Pages: ${book.pageCount}` : null,
   book.publisher ? `Publisher: ${book.publisher}` : null,
-  typeof book.averageRating === "number" ? `Rating: ${book.averageRating.toFixed(1)}` : null,
-  typeof book.ratingsCount === "number" ? `Ratings: ${book.ratingsCount}` : null,
+  typeof book.averageRating === "number"
+    ? `Rating: ${book.averageRating.toFixed(1)}`
+    : null,
+  typeof book.ratingsCount === "number"
+    ? `Ratings: ${book.ratingsCount}`
+    : null,
 ];
 
 export default function BookDetails() {
@@ -114,7 +122,11 @@ export default function BookDetails() {
       const bookData = res?.data?.data || null;
 
       setBook(bookData);
-      setCoverImage(bookData ? getBookImageCandidates(bookData)[0] || BOOK_PLACEHOLDER_IMAGE : BOOK_PLACEHOLDER_IMAGE);
+      setCoverImage(
+        bookData
+          ? getBookImageCandidates(bookData)[0] || BOOK_PLACEHOLDER_IMAGE
+          : BOOK_PLACEHOLDER_IMAGE,
+      );
       setIsSaved(bookData ? isTitleSaved(bookData.id) : false);
       setExplanations(null);
       setShowExplanation(false);
@@ -136,9 +148,7 @@ export default function BookDetails() {
 
   useEffect(() => {
     const shouldGenerateIntroduction =
-      book &&
-      !book.description &&
-      !book.longDescription;
+      book && !book.description && !book.longDescription;
 
     if (!shouldGenerateIntroduction) {
       setGeneratedIntroduction("");
@@ -151,18 +161,13 @@ export default function BookDetails() {
     const generateIntroduction = async () => {
       try {
         setLoadingIntroduction(true);
-        const res = await getAIExplanation(
-          book.title,
-          "",
-          cleanId,
-          {
-            contentType: "book",
-            purpose: "introduction",
-            authors: book.authors,
-            categories: book.categories,
-            publishedDate: book.publishedDate,
-          }
-        );
+        const res = await getAIExplanation(book.title, "", cleanId, {
+          contentType: "book",
+          purpose: "introduction",
+          authors: book.authors,
+          categories: book.categories,
+          publishedDate: book.publishedDate,
+        });
 
         if (cancelled) return;
 
@@ -206,7 +211,7 @@ export default function BookDetails() {
           authors: book.authors,
           categories: book.categories,
           publishedDate: book.publishedDate,
-        }
+        },
       );
 
       setExplanations(res?.data?.data || buildFallbackExplanation(book));
@@ -240,10 +245,14 @@ export default function BookDetails() {
     }
   };
 
-  const primaryAuthor = Array.isArray(book?.authors) && book.authors.length > 0 ? book.authors[0] : null;
-  const authorLink = primaryAuthor && WIKIPEDIA_NAME_PATTERN.test(primaryAuthor)
-    ? `https://en.wikipedia.org/wiki/${encodeURIComponent(primaryAuthor.replace(/\s+/g, "_"))}`
-    : null;
+  const primaryAuthor =
+    Array.isArray(book?.authors) && book.authors.length > 0
+      ? book.authors[0]
+      : null;
+  const authorLink =
+    primaryAuthor && WIKIPEDIA_NAME_PATTERN.test(primaryAuthor)
+      ? `https://en.wikipedia.org/wiki/${encodeURIComponent(primaryAuthor.replace(/\s+/g, "_"))}`
+      : null;
 
   if (loading) {
     return (
@@ -269,9 +278,7 @@ export default function BookDetails() {
   if (!book) {
     return (
       <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="text-center py-12 text-slate-300">
-          Book not found
-        </div>
+        <div className="text-center py-12 text-slate-300">Book not found</div>
       </div>
     );
   }
@@ -291,12 +298,28 @@ export default function BookDetails() {
             src={coverImage}
             alt={book.title}
             className="w-full max-w-[280px] rounded-xl shadow-2xl ring-1 ring-white/10 bg-slate-800 object-cover"
+            onLoad={(e) => {
+              const img = e.target;
+              const ratio = img.naturalWidth / img.naturalHeight;
+
+              // 🚨 If image is too wide → it's not a real book cover
+              if (ratio > 1.2) {
+                img.onerror = null;
+                img.src = BOOK_PLACEHOLDER_IMAGE;
+                setCoverImage(BOOK_PLACEHOLDER_IMAGE);
+              }
+            }}
             onError={(event) => {
               event.target.onerror = null;
+
               const nextImage = imageCandidates[currentCoverIndex + 1];
-              event.target.src = nextImage || BOOK_PLACEHOLDER_IMAGE;
+
               if (nextImage) {
                 setCoverImage(nextImage);
+                event.target.src = nextImage;
+              } else {
+                event.target.src = BOOK_PLACEHOLDER_IMAGE;
+                setCoverImage(BOOK_PLACEHOLDER_IMAGE);
               }
             }}
           />
@@ -306,11 +329,17 @@ export default function BookDetails() {
           <div>
             <div className="flex flex-wrap gap-2 mb-4">
               <span className="badge">Book</span>
-              {book.maturityRating && <span className="badge">{book.maturityRating}</span>}
-              {book.languageLabel && <span className="badge">{book.languageLabel}</span>}
+              {book.maturityRating && (
+                <span className="badge">{book.maturityRating}</span>
+              )}
+              {book.languageLabel && (
+                <span className="badge">{book.languageLabel}</span>
+              )}
             </div>
 
-            <h1 className="text-4xl md:text-5xl font-bold mb-2">{book.title}</h1>
+            <h1 className="text-4xl md:text-5xl font-bold mb-2">
+              {book.title}
+            </h1>
             {book.subtitle && (
               <p className="text-xl text-slate-300 mb-3">{book.subtitle}</p>
             )}
@@ -322,11 +351,16 @@ export default function BookDetails() {
           </div>
 
           <div className="grid sm:grid-cols-2 gap-3">
-            {infoChips(book).filter(Boolean).map((item) => (
-              <div key={item} className="rounded-xl border border-slate-700 bg-slate-900/70 px-4 py-3 text-slate-200">
-                {item}
-              </div>
-            ))}
+            {infoChips(book)
+              .filter(Boolean)
+              .map((item) => (
+                <div
+                  key={item}
+                  className="rounded-xl border border-slate-700 bg-slate-900/70 px-4 py-3 text-slate-200"
+                >
+                  {item}
+                </div>
+              ))}
           </div>
 
           <div className="flex flex-wrap gap-3">
@@ -358,12 +392,15 @@ export default function BookDetails() {
           </div>
 
           {loadingExplain && (
-            <p className="text-indigo-400">Building a clearer reading guide...</p>
+            <p className="text-indigo-400">
+              Building a clearer reading guide...
+            </p>
           )}
 
           {!showExplanation && !loadingExplain && (
             <p className="text-sm text-slate-400">
-              Use Explain Better for a simple summary, major themes, and why this book is worth reading.
+              Use Explain Better for a simple summary, major themes, and why
+              this book is worth reading.
             </p>
           )}
 
@@ -394,7 +431,9 @@ export default function BookDetails() {
             {hasDescription ? (
               <div
                 className="text-slate-300 leading-relaxed space-y-3"
-                dangerouslySetInnerHTML={{ __html: book.description || book.longDescription }}
+                dangerouslySetInnerHTML={{
+                  __html: book.description || book.longDescription,
+                }}
               />
             ) : loadingIntroduction ? (
               <p className="text-slate-400 leading-relaxed">
@@ -407,7 +446,9 @@ export default function BookDetails() {
             )}
           </div>
 
-          {(book.industryIdentifiers?.length > 0 || book.previewLink || book.infoLink) && (
+          {(book.industryIdentifiers?.length > 0 ||
+            book.previewLink ||
+            book.infoLink) && (
             <div className="card detail-card p-6">
               <h2 className="text-2xl font-bold mb-4">More Details</h2>
               <div className="grid sm:grid-cols-2 gap-3 text-slate-300">
@@ -445,10 +486,7 @@ export default function BookDetails() {
       {showExplanation && explanations && (
         <div>
           <h2 className="text-3xl font-bold mb-6">Explain Better</h2>
-          <ExplainSection
-            explanations={explanations}
-            contentType="book"
-          />
+          <ExplainSection explanations={explanations} contentType="book" />
         </div>
       )}
     </div>

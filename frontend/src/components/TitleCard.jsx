@@ -110,14 +110,26 @@ export default function TitleCard({ title, showActions = true }) {
           alt={displayTitle}
           loading="lazy"
           decoding="async"
-          className="w-full h-full"
+          className="w-full h-full object-cover"
+          onLoad={(e) => {
+            const img = e.target;
+            const ratio = img.naturalWidth / img.naturalHeight;
+
+            // 🚨 If image is too wide → it's NOT a real book cover
+            if (ratio > 1.2) {
+              img.src = BOOK_PLACEHOLDER_IMAGE;
+            }
+          }}
           onError={(event) => {
             event.target.onerror = null;
+
             const currentIndex = imageCandidates.indexOf(cardImage);
             const nextImage = imageCandidates[currentIndex + 1];
+
             event.target.src =
               nextImage ||
               (title.type === "book" ? BOOK_PLACEHOLDER_IMAGE : FALLBACK_IMAGE);
+
             if (nextImage) {
               setCardImage(nextImage);
             }
