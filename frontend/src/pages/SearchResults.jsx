@@ -1,40 +1,62 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import TitleCard from '../components/TitleCard';
-import { searchTitles, handleApiError } from '../utils/api';
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import TitleCard from "../components/TitleCard";
+import { handleApiError, searchTitles } from "../utils/api";
+
+const TYPE_OPTIONS = [
+  { value: "", label: "All" },
+  { value: "movie", label: "Movies" },
+  { value: "series", label: "Series" },
+  { value: "anime", label: "Anime" },
+  { value: "book", label: "Books" },
+];
+
+const TYPE_ORDER = { movie: 0, series: 1, anime: 2, book: 3 };
 
 export default function SearchResults() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  const query = searchParams.get('q') || '';
-  const type = searchParams.get('type') || '';
-  const genre = searchParams.get('genre') || '';
-  const mood = searchParams.get('mood') || '';
-  const page = searchParams.get('page') || '1';
+  const query = searchParams.get("q") || "";
+  const type = searchParams.get("type") || "";
+  const genre = searchParams.get("genre") || "";
+  const mood = searchParams.get("mood") || "";
+  const page = searchParams.get("page") || "1";
 
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [pagination, setPagination] = useState(null);
+  const [typeFilter, setTypeFilter] = useState("all");
   const skeletonCards = useMemo(() => Array.from({ length: 8 }), []);
 
   useEffect(() => {
     performSearch();
-  }, [query, type, genre, mood, page]);
+  }, [query, genre, mood, page]);
+
+  useEffect(() => {
+    setTypeFilter(type || "all");
+  }, [type]);
 
   const performSearch = async () => {
     setLoading(true);
     setError(null);
+
     try {
-      const res = await searchTitles(query, type, genre, mood, page);
+      const res = await searchTitles(query, "", genre, mood, page);
       const responseData = res?.data?.data;
 
       if (!responseData || !Array.isArray(responseData.results)) {
-        throw new Error('Unexpected API response');
+        throw new Error("Unexpected API response");
       }
 
-      setResults(responseData.results);
+      const sortedResults = [...responseData.results].sort((a, b) => {
+        const left = TYPE_ORDER[a.type] ?? 99;
+        const right = TYPE_ORDER[b.type] ?? 99;
+        return left - right;
+      });
+
+      setResults(sortedResults);
       setPagination(responseData.pagination || null);
     } catch (err) {
       setError(handleApiError(err));
@@ -43,50 +65,80 @@ export default function SearchResults() {
     }
   };
 
-  const buildSearchUrl = ({ q = query, type: searchType = type, genre: searchGenre = genre, mood: searchMood = mood, page: searchPage = page }) => {
+  const normalizedResults = results.map((item) => ({
+    ...item,
+    type: item.type?.toLowerCase() || "",
+  }));
+
+  const books = normalizedResults
+    .filter((item) => item.type === "book")
+    .sort((a, b) => (b.score || b.relevance || 0) - (a.score || a.relevance || 0));
+  const bestBook = books.length > 0 ? books[0] : null;
+  const nonBooks = normalizedResults.filter((item) => item.type !== "book");
+  const finalResults = bestBook ? [...nonBooks, bestBook] : nonBooks;
+
+  const filteredResults = finalResults.filter((item) => {
+    if (typeFilter === "all") return true;
+    return item.type?.toLowerCase() === typeFilter;
+  });
+
+  const buildSearchUrl = ({
+    q = query,
+    type: searchType = type,
+    genre: searchGenre = genre,
+    mood: searchMood = mood,
+    page: searchPage = page,
+  }) => {
     const params = new URLSearchParams();
-    if (q) params.set('q', q);
-    if (searchType) params.set('type', searchType);
-    if (searchGenre) params.set('genre', searchGenre);
-    if (searchMood) params.set('mood', searchMood);
-    if (searchPage) params.set('page', searchPage);
-    return `/search?${params.toString()}`;
+
+    if (q) params.set("q", q);
+    if (searchType) params.set("type", searchType);
+    if (searchGenre) params.set("genre", searchGenre);
+    if (searchMood) params.set("mood", searchMood);
+    if (searchPage && searchPage !== "1") params.set("page", searchPage);
+
+    return `/search${params.toString() ? `?${params.toString()}` : ""}`;
   };
 
   const handleFilterChange = (newFilters) => {
-    const nextType = newFilters.type ?? type;
-    const nextGenre = newFilters.genre ?? genre;
-    const nextMood = newFilters.mood ?? mood;
-    navigate(buildSearchUrl({ type: nextType, genre: nextGenre, mood: nextMood, page: '1' }));
+    navigate(
+      buildSearchUrl({
+        type: newFilters.type ?? type,
+        genre: newFilters.genre ?? genre,
+        mood: newFilters.mood ?? mood,
+        page: "1",
+      })
+    );
   };
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
-      {/* Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-2">
-          {query ? `Results for "${query}"` : 'Browse All'}
+          {query ? `Results for "${query}"` : "Browse All"}
         </h1>
         <p className="text-slate-400">
-          {pagination && `Found ${pagination.total} results`}
+          {pagination ? `Found ${pagination.total} results` : "Searching across titles"}
         </p>
       </div>
 
-      {/* Filters */}
       <div className="mb-8 flex flex-wrap gap-4">
         <select
-          value={type}
-          onChange={(e) => handleFilterChange({ type: e.target.value, genre })}
+          value={typeFilter}
+          onChange={(event) => setTypeFilter(event.target.value)}
           className="px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white focus:border-indigo-500"
+          aria-label="Content type"
         >
-          <option value="">All Types</option>
-          <option value="movie">Movies</option>
-          <option value="series">Series</option>
+          {TYPE_OPTIONS.map((option) => (
+            <option key={option.value || "all"} value={option.value}>
+              {option.label}
+            </option>
+          ))}
         </select>
 
         <select
           value={genre}
-          onChange={(e) => handleFilterChange({ type, genre: e.target.value })}
+          onChange={(event) => handleFilterChange({ genre: event.target.value })}
           className="px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white focus:border-indigo-500"
         >
           <option value="">All Genres</option>
@@ -100,7 +152,10 @@ export default function SearchResults() {
 
         {(query || type || genre) && (
           <button
-            onClick={() => navigate('/search')}
+            onClick={() => {
+              setTypeFilter("all");
+              navigate("/search");
+            }}
             className="btn-secondary"
           >
             Clear Filters
@@ -108,7 +163,6 @@ export default function SearchResults() {
         )}
       </div>
 
-      {/* Results */}
       {error ? (
         <div className="text-center py-12">
           <p className="text-red-400 mb-4">{error}</p>
@@ -129,54 +183,48 @@ export default function SearchResults() {
             </div>
           ))}
         </div>
-      ) : results.length === 0 ? (
+      ) : filteredResults.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-xl text-slate-400 mb-6">
-            No results found. Try a different search!
+            No results found. Try a different search.
           </p>
-          <button
-            onClick={() => navigate('/')}
-            className="btn-primary"
-          >
+          <button onClick={() => navigate("/search")} className="btn-primary">
             Back to Home
           </button>
         </div>
       ) : (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {results.map((title) => (
-              <TitleCard key={title.id} title={title} />
+            {filteredResults.map((title) => (
+              <TitleCard key={`${title.type}-${title.id}`} title={title} />
             ))}
           </div>
 
-          {/* Pagination */}
-          {pagination && (pagination.hasMore || parseInt(page) > 1) && (
+          {pagination && (pagination.hasMore || parseInt(page, 10) > 1) && (
             <div className="flex justify-center gap-4 mt-8">
-              {parseInt(page) > 1 && (
+              {parseInt(page, 10) > 1 && (
                 <button
                   onClick={() => {
-                    const newPage = parseInt(page) - 1;
+                    const newPage = parseInt(page, 10) - 1;
                     navigate(buildSearchUrl({ page: String(newPage) }));
                   }}
                   className="btn-secondary"
                 >
-                  ← Previous
+                  Previous
                 </button>
               )}
 
-              <span className="py-3 px-6 text-slate-300">
-                Page {page}
-              </span>
+              <span className="py-3 px-6 text-slate-300">Page {page}</span>
 
               {pagination.hasMore && (
                 <button
                   onClick={() => {
-                    const newPage = parseInt(page) + 1;
+                    const newPage = parseInt(page, 10) + 1;
                     navigate(buildSearchUrl({ page: String(newPage) }));
                   }}
                   className="btn-secondary"
                 >
-                  Next →
+                  Next
                 </button>
               )}
             </div>

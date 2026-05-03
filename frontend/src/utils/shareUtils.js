@@ -1,13 +1,16 @@
 // Share utilities
 
 export const generateShareText = (title) => {
-  return `Check out "${title.title}" on CurioCue! ${title.summary || title.plot}
+  return `Check out "${title.title}" on CurioCue! ${title.summary || title.plot || title.description || ''}
 
 #CurioCue #Recommendations`;
 };
 
 export const generateShareUrl = (titleId) => {
-  return `${window.location.origin}/title/${titleId}`;
+  const path = String(titleId).startsWith('book-')
+    ? `/book/${titleId}`
+    : `/title/${titleId}`;
+  return `${window.location.origin}${path}`;
 };
 
 export const shareToTwitter = (title) => {
@@ -39,7 +42,7 @@ export const shareNative = (title) => {
   if (navigator.share) {
     navigator.share({
       title: `Check out ${title.title}`,
-      text: title.summary || title.plot,
+      text: title.summary || title.plot || title.description || '',
       url: generateShareUrl(title.id),
     });
   }

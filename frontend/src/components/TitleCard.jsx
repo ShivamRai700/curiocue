@@ -6,18 +6,49 @@ import {
   removeTitleFromList,
   isTitleSaved,
 } from "../utils/storage";
-import { shareNative, shareToTwitter } from "../utils/shareUtils";
+import { shareNative } from "../utils/shareUtils";
+import { BOOK_PLACEHOLDER_IMAGE, getBookImageCandidates } from "../utils/books";
+
+const FALLBACK_IMAGE = "https://placehold.co/500x750?text=No+Image";
+
+const getTypeLabel = (title) => {
+  if (title.typeLabel) return title.typeLabel;
+
+  const labels = {
+    movie: "Movie",
+    series: "Series",
+    anime: "Anime",
+    book: "Book",
+    documentary: "Documentary",
+  };
+
+  return labels[title.type] || null;
+};
+
+const getTypeRoute = (title) => {
+  if (title.type === "book") {
+    return `/book/${title.id}`;
+  }
+
+  if (title.type === "anime") {
+    return `/title/series/${title.id}`;
+  }
+
+  return title.type ? `/title/${title.type}/${title.id}` : `/title/movie/${title.id}`;
+};
 
 export default function TitleCard({ title, showActions = true }) {
   const [isSaved, setIsSaved] = React.useState(isTitleSaved(title.id));
 
-  const handleSave = (e) => {
-    e.preventDefault();
+  const handleSave = (event) => {
+    event.preventDefault();
+
     if (isSaved) {
       removeTitleFromList(title.id);
     } else {
       saveTitleToList(title);
     }
+
     setIsSaved(!isSaved);
   };
 
@@ -27,113 +58,117 @@ export default function TitleCard({ title, showActions = true }) {
     return "text-orange-400";
   };
 
-  const getTypeEmoji = (type) => {
-    const emojis = {
-      movie: "🎬",
-      series: "📺",
-      anime: "✨",
-      book: "📚",
-      documentary: "🎥",
-    };
-    return emojis[type] || "🎬";
-  };
+  const displayTitle = title.title || "Unknown Title";
+  const typeLabel = getTypeLabel(title);
+  const imageCandidates = React.useMemo(
+    () => (title.type === "book" ? getBookImageCandidates(title) : [title.image, FALLBACK_IMAGE].filter(Boolean)),
+    [title]
+  );
+  const [cardImage, setCardImage] = React.useState(imageCandidates[0] || FALLBACK_IMAGE);
+  const metadata = [
+    title.type === "book"
+      ? (title.publishedDate ? `Published: ${title.publishedDate}` : title.year ? `Published: ${title.year}` : null)
+      : title.year ? `Year: ${title.year}` : null,
+    typeof title.rating === "number" && title.rating > 0
+      ? `Rating: ${title.rating.toFixed(1)}`
+      : null,
+  ].filter(Boolean);
+  const bookAuthors = Array.isArray(title.authors) ? title.authors.slice(0, 2).join(", ") : "";
 
-  const displayTitle = title.title || 'Unknown Title';
-  const wrapperClasses = "card card-hover overflow-hidden group transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl";
-  const Wrapper = title.type === 'book' ? 'div' : Link;
-  const wrapperProps = title.type === 'book'
-    ? { className: wrapperClasses }
-    : {
-        to: title.type ? `/title/${title.type}/${title.id}` : `/title/movie/${title.id}`,
-        className: wrapperClasses
-      };
+  React.useEffect(() => {
+    setCardImage(imageCandidates[0] || (title.type === "book" ? BOOK_PLACEHOLDER_IMAGE : FALLBACK_IMAGE));
+  }, [imageCandidates, title.type]);
 
   return (
-    <Wrapper {...wrapperProps}>
+    <Link
+      to={getTypeRoute(title)}
+      className="card card-hover overflow-hidden group transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl"
+    >
       <div className="relative overflow-hidden h-96 bg-slate-700">
-        {/* Image */}
         <img
-          src={
-            title.image && title.image.trim() !== ""
-              ? title.image
-              : "https://placehold.co/500x750?text=No+Image"
-          }
+          src={cardImage && cardImage.trim() !== "" ? cardImage : FALLBACK_IMAGE}
           alt={displayTitle}
           loading="lazy"
           decoding="async"
           className="w-full h-full object-cover"
-          onError={(e) => {
-            e.target.onerror = null;
-            e.target.src = "https://placehold.co/500x750?text=No+Image";
+          onError={(event) => {
+            event.target.onerror = null;
+            const currentIndex = imageCandidates.indexOf(cardImage);
+            const nextImage = imageCandidates[currentIndex + 1];
+            event.target.src = nextImage || (title.type === "book" ? BOOK_PLACEHOLDER_IMAGE : FALLBACK_IMAGE);
+            if (nextImage) {
+              setCardImage(nextImage);
+            }
           }}
         />
 
-        {/* Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-between p-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xl">{getTypeEmoji(title.type)}</span>
-              {title.year && (
-                <span className="text-sm text-slate-300">{title.year}</span>
-              )}
-            </div>
-          </div>
-
-          {/* Rating */}
-          {title.rating && (
-            <div
-              className={`text-lg font-bold ${getRatingColor(title.rating)}`}
-            >
-              ⭐ {title.rating.toFixed(1)}
-            </div>
-          )}
-        </div>
-
-        {/* Badge */}
-        {title.type && (
-          <div className="absolute top-3 left-3 badge">{title.type}</div>
-        )}
+        {typeLabel && <div className="absolute top-3 left-3 badge">{typeLabel}</div>}
       </div>
 
-      {/* Content */}
-      <div className="p-4 flex flex-col h-32">
-        <h3 className="font-bold text-lg mb-2 truncate group-hover:text-indigo-300 transition">
-          {title.title || 'Unknown Title'}
+      <div className="p-4 flex flex-col min-h-[9.5rem]">
+        <h3 className="font-bold text-lg mb-2 text-white group-hover:text-indigo-300 transition truncate-lines-2">
+          {displayTitle}
         </h3>
 
-        {title.genre && (
+        <div className="flex flex-wrap gap-2 mb-3">
+          {typeLabel && (
+            <span className="text-xs font-medium uppercase tracking-wide text-indigo-300">
+              {typeLabel}
+            </span>
+          )}
+          {metadata.map((item) => (
+            <span
+              key={item}
+              className={`text-xs font-medium ${
+                item.startsWith("Rating:") ? getRatingColor(title.rating) : "text-slate-300"
+              }`}
+            >
+              {item}
+            </span>
+          ))}
+        </div>
+
+        {title.type === "book" && bookAuthors && (
+          <p className="text-sm text-slate-300 mb-3 truncate-lines-2">
+            {bookAuthors}
+          </p>
+        )}
+
+        {Array.isArray(title.genre) && title.genre.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-3">
-            {title.genre.slice(0, 2).map((g, i) => (
-              <span key={i} className="text-xs text-slate-400">
-                {g}
+            {title.genre.slice(0, 2).map((genre) => (
+              <span
+                key={genre}
+                className="text-xs text-slate-400 truncate max-w-full"
+              >
+                {genre}
               </span>
             ))}
           </div>
         )}
 
-        {/* Actions */}
         {showActions && (
-          <div className="flex gap-2 mt-auto pt-3 border-t border-slate-700">
+          <div className="card-actions mt-auto pt-3 border-t border-slate-700">
             <button
               onClick={handleSave}
-              className="flex-1 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 transition text-sm font-medium"
+              className="card-action-button bg-slate-700 hover:bg-slate-600 text-sm font-medium"
               title={isSaved ? "Remove from saved" : "Save"}
             >
-              {isSaved ? "❤️ Saved" : "🤍 Save"}
+              {isSaved ? "Saved" : "Save"}
             </button>
             <button
-              onClick={(e) => {
-                e.preventDefault();
+              onClick={(event) => {
+                event.preventDefault();
                 shareNative(title);
               }}
-              className="px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 transition"
+              className="card-action-button bg-slate-700 hover:bg-slate-600 text-sm font-medium"
               title="Share"
             >
-              📤
+              Share
             </button>
           </div>
         )}
       </div>
-    </Wrapper>
+    </Link>
   );
 }

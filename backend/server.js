@@ -11,6 +11,7 @@ import titleRouter from './routes/title.js';
 import explainRouter from './routes/explain.js';
 import availabilityRouter from './routes/availability.js';
 import recommendationsRouter from './routes/recommendations.js';
+import booksRouter from './routes/books.js';
 
 // Middleware
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
@@ -52,6 +53,7 @@ app.use('/api/title', titleRouter);
 app.use('/api/explain', explainRouter);
 app.use('/api/availability', availabilityRouter);
 app.use('/api/recommendations', recommendationsRouter);
+app.use('/api/books', booksRouter);
 
 // Error handling
 app.use(notFoundHandler);

@@ -5,6 +5,7 @@ import Footer from './components/Footer';
 import Home from './pages/Home';
 import SearchResults from './pages/SearchResults';
 import TitleDetails from './pages/TitleDetails';
+import BookDetails from './pages/BookDetails';
 import SavedList from './pages/SavedList';
 import './index.css';
 
@@ -19,6 +20,7 @@ function App() {
             <Route path="/search" element={<SearchResults />} />
             <Route path="/title/:type/:id" element={<TitleDetails />} />
             <Route path="/title/:id" element={<TitleDetails />} />
+            <Route path="/book/:id" element={<BookDetails />} />
             <Route path="/saved" element={<SavedList />} />
           </Routes>
         </main>

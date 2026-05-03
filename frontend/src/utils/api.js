@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { cleanBookId } from './books';
 
 const API_BASE = import.meta.env.VITE_API_URL ||'/api';
 
@@ -23,6 +24,10 @@ export const getSearchSuggestions = (query) => {
 // Title Details
 export const getTitleDetails = (type, id) => {
   return apiClient.get(`/title/${type}/${id}`);
+};
+
+export const getBookDetails = (id) => {
+  return apiClient.get(`/books/${cleanBookId(id)}`);
 };
 
 export const getSimilarTitles = (type, id) => {
@@ -55,10 +60,11 @@ export const getRecommendationsByHistory = (titleIds) => {
 };
 
 // AI Explanation
-export const getAIExplanation = (title, plot, id) => {
+export const getAIExplanation = (title, plot, id, options = {}) => {
   return apiClient.post(`/explain/${id}`, {
     title,
-    plot
+    plot,
+    ...options
   });
 };
 
