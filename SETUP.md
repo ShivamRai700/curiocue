@@ -51,17 +51,20 @@ Then open: http://localhost:5173
 - ✅ `AvailabilityCard.jsx` - Where to watch/read
 - ✅ `ExplainSection.jsx` - Themes, words, endings
 - ✅ `LoadingSpinner.jsx` - Beautiful loading state
+- ✅ `LoadingSpinner` - Inlined loading state (used in pages)
 
 **Pages** (`src/pages/`)
 - ✅ `Home.jsx` - Hero, filters, trending
 - ✅ `SearchResults.jsx` - Search with advanced filters
 - ✅ `TitleDetails.jsx` - Full title page
+- ✅ `BookDetails.jsx` - Full book details page
 - ✅ `SavedList.jsx` - Your saved titles
 
 **Utils** (`src/utils/`)
 - ✅ `api.js` - API client with all endpoints
 - ✅ `storage.js` - LocalStorage management
 - ✅ `shareUtils.js` - Social sharing
+- ✅ `books.js` - Book-specific metadata helpers
 
 - ✅ `README.md` - Frontend documentation
 
@@ -74,6 +77,8 @@ Then open: http://localhost:5173
 ### Search & Discovery
 - ✅ Search by title, genre, mood, type
 - ✅ Filters: weekend watch, short binge, emotional, mind-blowing, easy watch, brainy
+- ✅ Search by title, genre, and type
+- ✅ Filters by genre and type
 - ✅ Browse by content type (movies, series, anime, books, documentaries)
 - ✅ Pagination support
 - ✅ Genre and mood filtering

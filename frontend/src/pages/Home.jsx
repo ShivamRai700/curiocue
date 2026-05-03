@@ -1,13 +1,17 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import TitleCard from '../components/TitleCard';
-import LoadingSpinner from '../components/LoadingSpinner';
-import { getRecommendations, getSearchSuggestions, handleApiError } from '../utils/api';
+import React, { useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import TitleCard from "../components/TitleCard";
+import LoadingSpinner from "../components/LoadingSpinner";
+import {
+  getRecommendations,
+  getSearchSuggestions,
+  handleApiError,
+} from "../utils/api";
 
 export default function Home() {
   const navigate = useNavigate();
 
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [trending, setTrending] = useState([]);
@@ -50,7 +54,7 @@ export default function Home() {
       const data = res?.data?.data?.recommendations || [];
 
       if (!Array.isArray(data)) {
-        throw new Error('Invalid data format');
+        throw new Error("Invalid data format");
       }
 
       setTrending(data);
@@ -89,10 +93,8 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-black text-white">
-
       {/* HERO */}
       <section className="py-24 px-4 text-center">
-
         <h1 className="text-5xl md:text-7xl font-black mb-6 gradient-text">
           CurioCue
         </h1>
@@ -103,7 +105,7 @@ export default function Home() {
 
         {/* SEARCH */}
         <div className="max-w-xl mx-auto relative">
-          <form onSubmit={handleSearch} className="flex gap-3">
+          <form onSubmit={handleSearch} className="flex items-stretch gap-3">
             <div className="flex-1 relative">
               <input
                 ref={inputRef}
@@ -113,7 +115,7 @@ export default function Home() {
                 onFocus={handleInputFocus}
                 onBlur={handleInputBlur}
                 placeholder="Search movies, series, anime, books..."
-                className="w-full px-5 py-3 rounded-xl bg-slate-800 border border-slate-600 text-white focus:outline-none focus:border-indigo-500"
+                className="w-full h-12 px-5 rounded-xl bg-slate-800 border border-slate-600 text-white focus:outline-none focus:border-indigo-500"
               />
 
               {/* SUGGESTIONS DROPDOWN */}
@@ -134,10 +136,12 @@ export default function Home() {
                         />
                       )}
                       <div>
-                        <div className="text-white font-medium">{suggestion.title}</div>
+                        <div className="text-white font-medium">
+                          {suggestion.title}
+                        </div>
                         <div className="text-slate-400 text-sm">
                           {suggestion.year && `${suggestion.year} • `}
-                          {suggestion.type === 'movie' ? 'Movie' : 'TV Show'}
+                          {suggestion.type === "movie" ? "Movie" : "TV Show"}
                         </div>
                       </div>
                     </button>
@@ -146,26 +150,17 @@ export default function Home() {
               )}
             </div>
 
-            <button
-              type="submit"
-              className="btn-primary px-6"
-            >
+            <button type="submit" className="btn-primary h-12 px-6 flex items-center justify-center">
               Search
             </button>
           </form>
         </div>
-
-        
-
       </section>
 
       {/* TRENDING SECTION */}
       <section className="px-4 pb-16 max-w-6xl mx-auto">
-
         <div className="flex justify-between items-center mb-8">
-          <h2 className="text-3xl font-bold">
-            Trending Now
-          </h2>
+          <h2 className="text-3xl font-bold">Trending Now</h2>
 
           <button
             onClick={fetchTrending}
@@ -178,13 +173,9 @@ export default function Home() {
         {loading ? (
           <LoadingSpinner />
         ) : error ? (
-          <div className="text-center text-red-400">
-            {error}
-          </div>
+          <div className="text-center text-red-400">{error}</div>
         ) : trending.length === 0 ? (
-          <div className="text-center text-slate-400">
-            No results available
-          </div>
+          <div className="text-center text-slate-400">No results available</div>
         ) : (
           <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-6">
             {trending.map((item) => (
@@ -192,9 +183,7 @@ export default function Home() {
             ))}
           </div>
         )}
-
       </section>
-
     </div>
   );
 }

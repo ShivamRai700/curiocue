@@ -22,18 +22,15 @@ npm run build
 ## Features
 
 ### Pages
-- **Home**: Hero section, content type filters, trending titles
-- **Search**: Advanced search with filters by genre, type, and mood
-- **Home**: Hero section, search bar with suggestions, trending titles.
-- **Search**: Advanced search with filters by genre and type.
+- **Home**: Hero section with real-time search suggestions and trending content.
+- **Search**: Advanced results grid with filtering by content type and genre.
 - **Title Details**: Full information, themes, ending explanations, availability
 - **Saved List**: Your personal collection of titles
 
 ### Components
 - **Header**: Navigation and search bar
 - **TitleCard**: Reusable title display with save/share
-- **LoadingSpinner**: Beautiful loading state
-- **LoadingSpinner**: Beautiful loading state (inlined in pages).
+- **LoadingSpinner**: Centered loading state for async operations.
 - **AvailabilityCard**: Where to legally watch/read
 - **ExplainSection**: Themes, tricky words, ending explanations
 - **Footer**: Links and information
@@ -56,6 +53,7 @@ src/
 ├── utils/            # Helper functions
 │   ├── api.js        # API client
 │   ├── storage.js    # Local storage utilities
+│   ├── books.js      # Book image and ISBN logic
 │   └── shareUtils.js # Social sharing utilities
 ├── App.jsx           # Main app component
 ├── main.jsx          # React DOM entry
