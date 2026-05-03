@@ -50,7 +50,6 @@ Then open: http://localhost:5173
 - ✅ `TitleCard.jsx` - Reusable title card (save/share)
 - ✅ `AvailabilityCard.jsx` - Where to watch/read
 - ✅ `ExplainSection.jsx` - Themes, words, endings
-- ✅ `LoadingSpinner.jsx` - Beautiful loading state
 - ✅ `LoadingSpinner` - Inlined loading state (used in pages)
 
 **Pages** (`src/pages/`)
@@ -75,8 +74,6 @@ Then open: http://localhost:5173
 ## 🎯 Features Implemented
 
 ### Search & Discovery
-- ✅ Search by title, genre, mood, type
-- ✅ Filters: weekend watch, short binge, emotional, mind-blowing, easy watch, brainy
 - ✅ Search by title, genre, and type
 - ✅ Filters by genre and type
 - ✅ Browse by content type (movies, series, anime, books, documentaries)
